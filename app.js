@@ -8,6 +8,8 @@ const {
 } = require('@handlebars/allow-prototype-access')
 const methodeOverride = require("method-override")
 
+const path = require("path")
+
 // UPLOAD IMAGE  //
 const multer = require("multer")
 
@@ -16,7 +18,7 @@ const storage = multer.diskStorage({
         cb(null, './public/uploads')
     },
     filename: function(req, file, cb) {
-        cb(null, file.fieldname + '-' + Date.now())
+        cb(null, file.originalname + '-' + Date.now() + path.extname(file.originalname))
     }
 })
 
@@ -99,7 +101,7 @@ app.route("/")
             name: file.filename,
             originalName: file.originalname,
             path: file.path.replace("public", ""),
-            createAt: Date.now()
+            createAt: Date.now(),
         }
     }
 
