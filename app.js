@@ -22,7 +22,30 @@ const storage = multer.diskStorage({
     }
 })
 
-const upload = multer({ storage: storage })
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 1,
+        files: 1
+    },
+    fileFilter: function(req, file, cb) {
+        if (
+
+            file.mimetype === "image/png" ||
+            file.mimetype === "image/jpg" ||
+            file.mimetype === "image/gif" ||
+            file.mimetype === "image/jpeg"
+        ) {
+            cb(null, true)
+        } else {
+            cb(null, false)
+            cb(new Error('Le fichier doit être au format jpg, png, gif ou jpeg !'))
+        }
+
+
+
+    }
+})
 
 // EXPRESS //
 const port = 1996;
