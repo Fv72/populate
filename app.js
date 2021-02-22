@@ -25,7 +25,7 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 1,
+        fileSize: 1 * 4098 * 4098,
         files: 1
     },
     fileFilter: function(req, file, cb) {
