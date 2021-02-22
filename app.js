@@ -3,12 +3,43 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const exphbs = require("express-handlebars");
 const Handlebars = require("handlebars");
-const { allowInsecurePrototypeAccess } = require('@handlebars/allow-prototype-access')
+const {
+    allowInsecurePrototypeAccess
+} = require('@handlebars/allow-prototype-access')
+const methodeOverride = require("method-override")
 
+// UPLOAD IMAGE  //
+const multer = require("multer")
+
+const storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        cb(null, './public/uploads')
+    },
+    filename: function(req, file, cb) {
+        cb(null, file.fieldname + '-' + Date.now())
+    }
+})
+
+const upload = multer({ storage: storage })
+
+// EXPRESS //
+const port = 1996;
 const app = express();
 
+// EXPRESS STATIQUE //
+
+app.use(express.static("public"))
+
+// METHODE-OVERRIDE
+app.use(methodeOverride("_method"))
+
+
 // Handlebars
-app.engine('hbs', exphbs({ defaultLayout: 'main', extname: 'hbs', handlebars: allowInsecurePrototypeAccess(Handlebars) }));
+app.engine('hbs', exphbs({
+    defaultLayout: 'main',
+    extname: 'hbs',
+    handlebars: allowInsecurePrototypeAccess(Handlebars)
+}));
 app.set('view engine', 'hbs')
 
 // BodyParser
@@ -18,12 +49,21 @@ app.use(bodyParser.urlencoded({
 
 
 // MongoDB
-mongoose.connect("mongodb://localhost:27018/boutiqueGame", { useNewUrlParser: true })
+mongoose.connect("mongodb://localhost:27017/boutiqueGame", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
 
 const productSchema = {
     title: String,
-    Content: String,
-    Price: Number
+    content: String,
+    price: Number,
+    cover: {
+        name: String,
+        originalName: String,
+        path: String,
+        createAt: Date
+    }
 };
 
 const Product = mongoose.model("product", productSchema)
@@ -43,50 +83,55 @@ app.route("/")
 
         })
     })
-    .post((req, res) => {
-        const newProduct = new Product({
-            title: req.body.title,
-            content: req.body.content,
-            Price: req.body.price
-        });
-        newProduct.save(function(err) {
-            if (!err) {
-                res.send("Save OK !")
-            } else {
-                res.send(err)
-            }
-        })
+
+.post(upload.single("cover"), (req, res) => {
+
+    const file = req.file;
+    console.log(file);
+    const newProduct = new Product({
+        title: req.body.title,
+        content: req.body.content,
+        price: req.body.price
     })
-    .put(function(req, res) {
-        Product.updateOne(
-            // CONDITION //
-            { _id: req.params.id },
-            // UPDATE //
-            {
-                title: req.body.title,
-                content: req.body.content,
-                price: req.body.price
-            },
-            // OPTION //
-            // PERMET DE FAIRE PLUSIEURS MODIFS D'UN COUP //
-            { multi: true },
-            // EXEC //
-            function(err) {
-                if (!err) {
-                    res.send("Update OK !")
-                } else {
-                    res.send(err)
-                }
-            }
-        )
+
+    if (file) {
+        newProduct.cover = {
+            name: file.filename,
+            originalName: file.originalname,
+            path: file.path.replace("public", ""),
+            createAt: Date.now()
+        }
+    }
+
+    newProduct.save(function(err) {
+
+        if (!err) {
+            res.send("save ok !")
+        } else {
+            res.send(err)
+        }
     })
-    .delete()
+})
+
+
+.delete(function(req, res) {
+    Product.deleteMany(function(err) {
+        if (!err) {
+            res.send("All delete")
+        } else {
+            res.send(err)
+        }
+    })
+
+})
 
 // ROUTE EDITION //
 
 app.route("/:id")
     .get(function(req, res) {
-        Product.findOne({ _id: req.params.id },
+        Product.findOne({
+                _id: req.params.id
+            },
             function(err, produit) {
                 if (!err) {
                     res.render("edition", {
@@ -103,10 +148,54 @@ app.route("/:id")
         )
     })
 
+.put(function(req, res) {
+    Product.updateOne(
+        // CONDITION //
+        {
+            _id: req.params.id
+        },
+        // UPDATE //
+        {
+            title: req.body.title,
+            content: req.body.content,
+            price: req.body.price
+        },
+        // OPTION //
+        // PERMET DE FAIRE PLUSIEURS MODIFS D'UN COUP //
+        {
+            multi: true
+        },
+        // EXEC //
+        function(err) {
+            if (!err) {
+                res.send("Update OK !")
+            } else {
+                res.send(err)
+            }
+        }
+    )
+})
 
-.put()
+.delete(function(req, res) {
 
-app.listen(4000, function() {
-    console.log("écoute le port 4000");
+    Product.deleteOne({
+            _id: req.params.id
+        },
+        function(err) {
+
+            if (!err) {
+                res.send("Product delete !")
+            } else {
+                res.send(err)
+            }
+        }
+    )
+})
+
+
+
+
+app.listen(port, function() {
+    console.log(`Ecoute le port ${port}, lancé à : ${new Date().toLocaleString()}`);
 
 })
