@@ -7,8 +7,14 @@
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
                         {{#each product}}
-                        <li class="list-group-item">{{this.title}}</li>
-                        <img src="{{this.cover.path}}" alt="" style="max-width: 200px;" >
+
+                        <li class="list-group-item">
+                            {{this.title}}
+                            <span>Source Multer</span>
+                            <img src="{{this.cover.path}}" alt="" style="max-width: 200px;">
+                            <span>Source Sharp</span>
+                            <img src="{{this.cover.urlSharp}}" alt="" style="max-width: 200px;">
+                        </li>
                         {{/each}}
                     </ul>
                 </div>

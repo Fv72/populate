@@ -7,6 +7,7 @@ const {
     allowInsecurePrototypeAccess
 } = require('@handlebars/allow-prototype-access')
 const methodeOverride = require("method-override")
+const sharp = require("sharp")
 
 const path = require("path")
 
@@ -87,6 +88,7 @@ const productSchema = {
         name: String,
         originalName: String,
         path: String,
+        urlSharp: String,
         createAt: Date
     }
 };
@@ -113,6 +115,10 @@ app.route("/")
 
     const file = req.file;
     console.log(file);
+    sharp(file.path)
+        .resize(200)
+        .webp({ quality: 80 })
+        .toFile('./public/uploads/web/' + file.originalname.split('.').slice(0, -1).join('.') + ".webp", (err, info) => {});
     const newProduct = new Product({
         title: req.body.title,
         content: req.body.content,
@@ -124,6 +130,7 @@ app.route("/")
             name: file.filename,
             originalName: file.originalname,
             path: file.path.replace("public", ""),
+            urlSharp: '/uploads/web/' + file.originalname.split('.').slice(0, -1).join('.') + ".webp",
             createAt: Date.now(),
         }
     }
