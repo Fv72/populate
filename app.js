@@ -133,16 +133,23 @@ app.route("/category")
 app.route("/")
     .get((req, res) => {
         // MODEL FIND //
-        Product.find(function(err, produit) {
-            if (!err) {
-                res.render("index", {
-                    product: produit
-                })
-            } else {
-                res.send(err)
-            }
+        Product
+            .find()
+            .exec(function(err, produit) {
+                if (!err) {
+                    Category.find(function(err, category) {
+                        res.render("index", {
+                            product: produit,
+                            category: category
 
-        })
+                        })
+
+                    })
+                } else {
+                    res.send(err)
+                }
+
+            })
     })
 
 .post(upload.single("cover"), (req, res) => {
