@@ -80,7 +80,7 @@ mongoose.connect("mongodb://localhost:27017/boutiqueGame", {
     useUnifiedTopology: true
 })
 
-const productSchema = {
+const productSchema = new mongoose.Schema({
     title: String,
     content: String,
     price: Number,
@@ -91,11 +91,45 @@ const productSchema = {
         urlSharp: String,
         createAt: Date
     }
-};
+});
+
+const categorySchema = new mongoose.Schema({
+    title: String
+})
 
 const Product = mongoose.model("product", productSchema)
+const Category = mongoose.model("category", categorySchema)
 
 // Routes
+
+app.route("/category")
+    .get((req, res) => {
+        Category.find((err, category) => {
+            if (!err) {
+                res.render("category", {
+                    category: category
+                })
+            } else {
+                res.send(err)
+            }
+        })
+    })
+
+.post((req, res) => {
+    const newCategory = new Category({
+
+        title: req.body.title
+    })
+    newCategory.save(function(err) {
+        if (!err) {
+            res.send("Category save")
+        } else {
+            res.send(err)
+        }
+
+    })
+})
+
 app.route("/")
     .get((req, res) => {
         // MODEL FIND //
@@ -117,7 +151,9 @@ app.route("/")
     console.log(file);
     sharp(file.path)
         .resize(200)
-        .webp({ quality: 80 })
+        .webp({
+            quality: 80
+        })
         .toFile('./public/uploads/web/' + file.originalname.split('.').slice(0, -1).join('.') + ".webp", (err, info) => {});
     const newProduct = new Product({
         title: req.body.title,
@@ -229,5 +265,4 @@ app.route("/:id")
 
 app.listen(port, function() {
     console.log(`Ecoute le port ${port}, lancé à : ${new Date().toLocaleString()}`);
-
 })
