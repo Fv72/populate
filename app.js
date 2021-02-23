@@ -84,6 +84,7 @@ const productSchema = new mongoose.Schema({
     title: String,
     content: String,
     price: Number,
+    category: { type: mongoose.Schema.Types.ObjectId, ref: "category" },
     cover: {
         name: String,
         originalName: String,
@@ -135,6 +136,7 @@ app.route("/")
         // MODEL FIND //
         Product
             .find()
+            .populate("category")
             .exec(function(err, produit) {
                 if (!err) {
                     Category.find(function(err, category) {
@@ -165,7 +167,8 @@ app.route("/")
     const newProduct = new Product({
         title: req.body.title,
         content: req.body.content,
-        price: req.body.price
+        price: req.body.price,
+        category: req.body.category
     })
 
     if (file) {
